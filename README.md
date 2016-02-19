@@ -134,3 +134,7 @@ If you produce a `:` somewhere where one has already existed, it's "spent" statu
 That is, if one program did this: `:A;B`, and later, the second program turned that into `%A;B`, then yet later, the second program turned it back into `:A;B`.
 The `:` before the `A` would still be spent, and would not fork again.  If a `:` is produced somewhere
 where there was not one before, it defaults to unspent.
+
+
+### Licensing and original authorship
+The original code for FukYorBrane was retrieved from [Voxelperfect](http://esoteric.voxelperfect.net/files/fyb/), it is licensed under the [MIT License](https://opensource.org/licenses/MIT).
