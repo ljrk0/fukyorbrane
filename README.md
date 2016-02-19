@@ -18,23 +18,23 @@ There are 17 commands in FukYorBrane:
 
 COMMAND | VALUE | EFFECT
 ------- | ----- | -------
-      % |     0 | nop, does nothing
-      + |     1 | increments the current value in the opponent's program buffer, looping if necessary
-      < |     2 | moves the data pointer to the left (*not* looping, if it goes below 0, it stays at 0)
-      > |     3 | moves the data pointer to the right (looping if necessary)
-      , |     4 | reserved but has no effect
-      . |     5 | reserved but has no effect
-      ! |     6 | commit the current value to the opponent's active program buffer
-      ? |     7 | uncommit the current value (replace the current value with the value in the original program)
-      [ |     8 | start a brainfuck-style loop (loop while the value at the current location in the opponent's program buffer is not nop)
-      ] |     9 | end of a `[` loop
-      { |    10 | loop while the opponent does not have a program pointer at the current location
-      } |    11 | end of a `}` loop
-      : |    12 | start a thread.  The parent thread will skip over the matching `;`, the child will loop between this and the matching `;`<br>NOTE: any given `:` will only fork once, then it's spent
-      ; |    13 | end of a `;` loop
+    `%` |     0 | nop, does nothing
+    `+` |     1 | increments the current value in the opponent's program buffer, looping if necessary
+    `<` |     2 | moves the data pointer to the left (*not* looping, if it goes below 0, it stays at 0)
+    `>` |     3 | moves the data pointer to the right (looping if necessary)
+    `,` |     4 | reserved but has no effect
+    `.` |     5 | reserved but has no effect
+    `!` |     6 | commit the current value to the opponent's active program buffer
+    `?` |     7 | uncommit the current value (replace the current value with the value in the original program)
+    `[` |     8 | start a brainfuck-style loop (loop while the value at the current location in the opponent's program buffer is not nop)
+    `]` |     9 | end of a `[` loop
+    `{` |    10 | loop while the opponent does not have a program pointer at the current location
+    `}` |    11 | end of a `}` loop
+    `:` |    12 | start a thread.  The parent thread will skip over the matching `;`, the child will loop between this and the matching `;`<br>NOTE: any given `:` will only fork once, then it's spent
+    `;` |    13 | end of a `;` loop
     N/A |    14 | **BOMB!**  This is an important one.  If *any* program pointer (even if you have several from threading) hits this, you lose!<br>**NOTE:** You cannot set a bomb in your own program, so it doesn't have a character.
-      * |    15 | exit - end the current thread.  If you're not in the topmost thread, you can only exit at the very end of a thread: `:......*;`<br>**NOTE:** If the current thread is the only thread, you lose!
-      @ |    16 | defect: instead of editing the opponent's program buffer, this thread will edit your own.  You can later defect back.<br>**NOTE:** If you commit a defect, *you defect* (this is to try to prevent pure manglers from being effective)
+    `*` |    15 | exit - end the current thread.  If you're not in the topmost thread, you can only exit at the very end of a thread: `:......*;`<br>**NOTE:** If the current thread is the only thread, you lose!
+    `@` |    16 | defect: instead of editing the opponent's program buffer, this thread will edit your own.  You can later defect back.<br>**NOTE:** If you commit a defect, *you defect* (this is to try to prevent pure manglers from being effective)
 
 
 ## Simple Stragegy
