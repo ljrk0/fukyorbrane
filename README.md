@@ -1,7 +1,8 @@
 # FukYorBrane
 
 ## Description & Specifications
-FukYorBrane is a cross between BrainFuck and CoreWars.  Basically, you have two FYB programs
+FukYorBrane is a cross between [BrainFuck](https://esolangs.org/wiki/Brainfuck) and [CoreWars](http://corewar.co.uk/).
+Basically, you have two FYB programs
 running simultaneusly.  The data buffer for each of them is the opponent's program buffer.  The
 objective is to cause the opponent's program to quit with a "bomb."  The changes you make to the
 opponent's program buffer must be committed (see `!`) before they will have an effect.
