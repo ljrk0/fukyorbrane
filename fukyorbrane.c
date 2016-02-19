@@ -577,7 +577,7 @@ int execcmd(int procnum, unsigned char procowner, int *pptr, int *dptr)
                 procs[procnum] = 0;
             } else {
                 /* only bomb if it's the last command of a thread */
-                if (progs[procowner][(*pptr)+1] == CMD_L3C) {
+                if (progs[procowner-1][(*pptr)+1] == CMD_L3C) {
                     procs[procnum] = 0;
                 }
             }
