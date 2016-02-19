@@ -77,7 +77,7 @@ unsigned char outt = 0;
 #define CMD_CIN 18
 #define CMD_COT 19
 
-int cmdToInt(char cmd);
+int cmdToInt(unsigned char cmd);
 char intToCmd(int cmd);
 char intToCmd(int cmd);
 int execcmd(int procnum, unsigned char procowner, int *pptr, int *dptr);
@@ -154,7 +154,12 @@ int main(int argc, char **argv)
 		proglens[prog] = 0;
 
 		while (!feof(fps[prog])) {
-			inc = cmdToInt(getc(fps[prog]));
+			int c = getc(fps[prog]);
+			if (c != EOF) {
+				inc = cmdToInt((unsigned char)(c));
+			} else {
+				inc = -1;	//TODO: better error handling
+			}
 			if (inc == CMD_CIN) {
 				incomment = 1;
 				inc = -1;
@@ -299,7 +304,7 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-int cmdToInt(char cmd)
+int cmdToInt(unsigned char cmd)
 {
 	switch (cmd) {
 	case '%':
@@ -334,7 +339,6 @@ int cmdToInt(char cmd)
 		return CMD_OKB;
 	case '@':
 		return CMD_DEF;
-
 	case '(':
 		return CMD_CIN;
 	case ')':

@@ -1,5 +1,7 @@
 CC=gcc
-CFLAGS=-O2 -Wall -Werror -g
+CFLAGS=-std=c99
+CFLAGS+=-O2 -Wall -Wpedantic -Wextra -Wshadow -Wconversion -Wno-sign-compare -g
+#CFLAGS+=-Werror
 
 CFILES=fukyorbrane.c
 
