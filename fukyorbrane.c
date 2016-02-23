@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2016 Leonard König
  * Copyright (c) 2005 Gregor Richards
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,10 +24,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 #ifndef MAX_PROG_LEN
 #define MAX_PROG_LEN 32256
+#endif
+
+#ifndef MAX_PROC_COUNT
+#define MAX_PROC_COUNT 1024
 #endif
 
 /* program data */
@@ -79,7 +83,15 @@ unsigned char outt = 0;
 
 int cmdToInt(unsigned char cmd);
 char intToCmd(int cmd);
-char intToCmd(int cmd);
+/**
+ * Executes a process and checks for a win-condition
+ * @param procnum - The process to execute
+ * @param procowner - The program to which procnum belongs
+ * @param *pptr - The point in the program where procnum's current program is
+ * @param *dptr - Same thing with procnum's data
+ *
+ * @returns - The winner of the current turn, 0 if it's still to be played
+ */
 int execcmd(int procnum, unsigned char procowner, int *pptr, int *dptr);
 
 int main(int argc, char **argv)
@@ -132,10 +144,10 @@ int main(int argc, char **argv)
 	progSpent[1] = (unsigned char *) malloc(MAX_PROG_LEN * sizeof(unsigned char));
 	progMods[0] = (int *) malloc(MAX_PROG_LEN * sizeof(int));
 	progMods[1] = (int *) malloc(MAX_PROG_LEN * sizeof(int));
-	procs = (unsigned char *) malloc(1024 * sizeof(unsigned char));
-	procdef = (unsigned char *) malloc(1024 * sizeof(unsigned char));
-	procpptrs = (int *) malloc(1024 * sizeof(int));
-	procdptrs = (int *) malloc(1024 * sizeof(int));
+	procs = (unsigned char *) malloc(MAX_PROC_COUNT * sizeof(unsigned char));
+	procdef = (unsigned char *) malloc(MAX_PROC_COUNT * sizeof(unsigned char));
+	procpptrs = (int *) malloc(MAX_PROC_COUNT * sizeof(int));
+	procdptrs = (int *) malloc(MAX_PROC_COUNT * sizeof(int));
 
 	fps[0] = fopen(argv[1], "r");
 	if (!fps[0]) {
@@ -149,6 +161,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	/* parse input */
 	for (prog = 0; prog <= 1; prog++) {
 		int incomment = 0;
 		proglens[prog] = 0;
@@ -173,6 +186,8 @@ int main(int argc, char **argv)
 				proglens[prog]++;
 			}
 		}
+
+		fclose(fps[prog]);
 	}
 
 	/* the programs must be of equal length to be fair */
@@ -272,7 +287,7 @@ int main(int argc, char **argv)
 			}
 		}
 
-		// see if anybody accidentally quit themselves
+		/* see if anybody accidentally quit themselves */
 		alive[0] = 0;
 		alive[1] = 0;
 		for (proc = 0; proc < procc; proc++) {
@@ -425,14 +440,13 @@ int execcmd(int procnum, unsigned char procowner, int *pptr, int *dptr)
 
 	case CMD_COM:
 		progs[procedits][*dptr] = progMods[procedits][*dptr];
-		// if you commit a defect, you defect!
+		/* if you commit a defect, you defect! */
 		if (progs[procedits][*dptr] == CMD_DEF) {
 			procdef[procnum] = !procdef[procnum];
 			*dptr = *pptr;
 		}
 		/* perhaps make commit only work once? */
 		break;
-
 	case CMD_UNC:
 		progMods[procedits][*dptr] = progs[procedits][*dptr];
 		break;
@@ -616,7 +630,6 @@ int execcmd(int procnum, unsigned char procowner, int *pptr, int *dptr)
 	case CMD_BOM:
 		/* boom! */
 		return ((!(procowner-1)) + 1);
-
 	case CMD_OKB:
 		/* sorta boom! */
 		if (procnum < 2) {
@@ -635,6 +648,7 @@ int execcmd(int procnum, unsigned char procowner, int *pptr, int *dptr)
 		*dptr = *pptr;
 		break;
 	}
+
 
 	(*pptr)++;
 	if (*pptr >= proglens[0]) {
