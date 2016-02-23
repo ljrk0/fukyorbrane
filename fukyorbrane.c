@@ -153,13 +153,10 @@ int main(int argc, char **argv)
 		int incomment = 0;
 		proglens[prog] = 0;
 
-		while (!feof(fps[prog])) {
-			int c = getc(fps[prog]);
-			if (c != EOF) {
-				inc = cmdToInt((unsigned char)(c));
-			} else {
-				inc = -1;	//TODO: better error handling
-			}
+		int c = 0;
+		while ((c = getc(fps[prog])) != EOF) {
+			inc = cmdToInt((unsigned char)(c));
+
 			if (inc == CMD_CIN) {
 				incomment = 1;
 				inc = -1;
@@ -265,7 +262,7 @@ int main(int argc, char **argv)
 
 		for (proc = 0; proc < procc; proc++) {
 			if (procs[proc]) {
-				if ((winner = execcmd(proc, procs[proc], procpptrs + proc, procdptrs + proc))) {
+				if ((winner = execcmd(proc, procs[proc], &procpptrs[proc], &procdptrs[proc]))) {
 					if (outt) {
 						fprintf(stderr, "\n");
 					}
@@ -554,7 +551,7 @@ int execcmd(int procnum, unsigned char procowner, int *pptr, int *dptr)
 
 	case CMD_L3O:
 		/* start a new proc! */
-		if (!progSpent[procnum][*pptr]) {
+		if (!progSpent[procowner-1][*pptr]) {
 			procs[procc] = procowner;
 			procpptrs[procc] = *pptr + 1;
 			procdptrs[procc] = *dptr;
@@ -562,7 +559,7 @@ int execcmd(int procnum, unsigned char procowner, int *pptr, int *dptr)
 
 			procc++;
 
-			progSpent[procnum][*pptr] = 1;
+			progSpent[procowner-1][*pptr] = 1;
 		}
 
 		/* now this proc needs to skip to the end */
