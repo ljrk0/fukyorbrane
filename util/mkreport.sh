@@ -7,7 +7,7 @@ else
 fi
 
 export COUNT=0
-for j in *.fyb
+for j in $LST
 do
         export COUNT=$(( COUNT + 1 ))
 done
@@ -16,7 +16,7 @@ for i in $LST
 do
 	echo "$i"
 	export PTS=0
-	for j in *.fyb
+	for j in $LST
 	do
 		export A="`../fukyorbrane $i $j`"
 		export B="`../fukyorbrane $j $i`"
