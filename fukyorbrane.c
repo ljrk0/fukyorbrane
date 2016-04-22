@@ -33,23 +33,30 @@
 #define MAX_PROC_COUNT 1024
 #endif
 
+struct Program {
+	int *data;
+	unsigned char spent;
+	int *mods;
+	int len;
+};
+
 /* program data */
-int *progs[2];
+int progs[2][MAX_PROG_LEN];
 /* a command is "spent" if it's a fork that's already forked
  * perhaps later commits will be spendable too */
-unsigned char *progSpent[2];
+unsigned char progSpent[2][MAX_PROG_LEN];
 /* uncommitted program data */
-int *progMods[2];
+int progMods[2][MAX_PROG_LEN];
 /* lengths of each program */
 int proglens[2];
 /* owner of each process */
-unsigned char *procs;
+unsigned char procs[MAX_PROC_COUNT];
 /* defected processes */
-unsigned char *procdef;
+unsigned char procdef[MAX_PROC_COUNT];
 /* program pointer for each proc */
-int *procpptrs;
+int procpptrs[MAX_PROC_COUNT];
 /* data pointer for each proc */
-int *procdptrs;
+int procdptrs[MAX_PROC_COUNT];
 /* process count */
 int procc;
 
@@ -137,17 +144,6 @@ int main(int argc, char **argv)
 			}
 		}
 	}
-
-	progs[0] = (int *) malloc(MAX_PROG_LEN * sizeof(int));
-	progs[1] = (int *) malloc(MAX_PROG_LEN * sizeof(int));
-	progSpent[0] = (unsigned char *) malloc(MAX_PROG_LEN * sizeof(unsigned char));
-	progSpent[1] = (unsigned char *) malloc(MAX_PROG_LEN * sizeof(unsigned char));
-	progMods[0] = (int *) malloc(MAX_PROG_LEN * sizeof(int));
-	progMods[1] = (int *) malloc(MAX_PROG_LEN * sizeof(int));
-	procs = (unsigned char *) malloc(MAX_PROC_COUNT * sizeof(unsigned char));
-	procdef = (unsigned char *) malloc(MAX_PROC_COUNT * sizeof(unsigned char));
-	procpptrs = (int *) malloc(MAX_PROC_COUNT * sizeof(int));
-	procdptrs = (int *) malloc(MAX_PROC_COUNT * sizeof(int));
 
 	fps[0] = fopen(argv[1], "r");
 	if (!fps[0]) {
