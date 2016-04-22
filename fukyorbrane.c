@@ -33,30 +33,37 @@
 #define MAX_PROC_COUNT 1024
 #endif
 
-struct Program {
-	int *data;
+struct PData {
+	/* program data */
+	int data;
+	/* a command is "spent" if it's a fork that's already forked
+	 * perhaps later commits will be spendable too */
 	unsigned char spent;
-	int *mods;
+	/* uncommitted program data */
+	int mods;
+};
+
+struct Program {
+	struct PData pdata[MAX_PROG_LEN];
+	/* lengths of program */
 	int len;
 };
 
-/* program data */
-int progs[2][MAX_PROG_LEN];
-/* a command is "spent" if it's a fork that's already forked
- * perhaps later commits will be spendable too */
-unsigned char progSpent[2][MAX_PROG_LEN];
-/* uncommitted program data */
-int progMods[2][MAX_PROG_LEN];
-/* lengths of each program */
-int proglens[2];
-/* owner of each process */
-unsigned char procs[MAX_PROC_COUNT];
-/* defected processes */
-unsigned char procdef[MAX_PROC_COUNT];
-/* program pointer for each proc */
-int procpptrs[MAX_PROC_COUNT];
-/* data pointer for each proc */
-int procdptrs[MAX_PROC_COUNT];
+struct Program programs[2];
+
+struct Process {
+	/* owner of each process */
+	unsigned char owner;
+	/* defected processes */
+	unsigned char def;
+	/* program pointer for each proc */
+	int pptrs;
+	/* data pointer for each proc */
+	int dptrs;
+};
+
+struct Process process[MAX_PROC_COUNT];
+
 /* process count */
 int procc;
 
@@ -160,7 +167,7 @@ int main(int argc, char **argv)
 	/* parse input */
 	for (prog = 0; prog <= 1; prog++) {
 		int incomment = 0;
-		proglens[prog] = 0;
+		programs[prog].len = 0;
 
 		int c = 0;
 		while ((c = getc(fps[prog])) != EOF) {
@@ -176,10 +183,10 @@ int main(int argc, char **argv)
 			}
 
 			if (inc != -1 && !incomment) {
-				progs[prog][proglens[prog]] = inc;
-				progMods[prog][proglens[prog]] = inc;
-				progSpent[prog][proglens[prog]] = 0;
-				proglens[prog]++;
+				programs[prog].pdata[programs[prog].len].data = inc;
+				programs[prog].pdata[programs[prog].len].mods = inc;
+				programs[prog].pdata[programs[prog].len].spent = 0;
+				programs[prog].len++;
 			}
 		}
 
@@ -187,28 +194,28 @@ int main(int argc, char **argv)
 	}
 
 	/* the programs must be of equal length to be fair */
-	while (proglens[0] < proglens[1]) {
-		progs[0][proglens[0]] = CMD_NOP;
-		progMods[0][proglens[0]] = CMD_NOP;
-		progSpent[0][proglens[0]] = 0;
-		proglens[0]++;
+	while (programs[0].len < programs[1].len) {
+		programs[0].pdata[programs[0].len].data = CMD_NOP;
+		programs[0].pdata[programs[0].len].mods = CMD_NOP;
+		programs[0].pdata[programs[0].len].spent = 0;
+		programs[0].len++;
 	}
-	while (proglens[1] < proglens[0]) {
-		progs[1][proglens[1]] = CMD_NOP;
-		progMods[1][proglens[1]] = CMD_NOP;
-		progSpent[1][proglens[1]] = 0;
-		proglens[1]++;
+	while (programs[1].len < programs[0].len) {
+		programs[1].pdata[programs[1].len].data = CMD_NOP;
+		programs[1].pdata[programs[1].len].mods = CMD_NOP;
+		programs[1].pdata[programs[1].len].spent = 0;
+		programs[1].len++;
 	}
 
 	/* now bootstrap the processes ... */
-	procs[0] = 1;
-	procdef[0] = 0;
-	procpptrs[0] = 0;
-	procdptrs[0] = 0;
-	procs[1] = 2;
-	procdef[1] = 0;
-	procpptrs[1] = 0;
-	procdptrs[1] = 0;
+	process[0].owner = 1;
+	process[0].def = 0;
+	process[0].pptrs = 0;
+	process[0].dptrs = 0;
+	process[1].owner = 2;
+	process[1].def = 0;
+	process[1].pptrs = 0;
+	process[1].dptrs = 0;
 	procc = 2;
 
 	for (turnn = 0; turnn < 10000000; turnn++) {
@@ -227,8 +234,8 @@ int main(int argc, char **argv)
 
 				fprintf(stderr, "==============================\n");
 				fprintf(stderr, "%s\n\t", argv[proc + 1]);
-				for (inc = 0; inc < proglens[0]; inc++) {
-					fprintf(stderr, "%c", intToCmd(progs[proc][inc]));
+				for (inc = 0; inc < programs[0].len; inc++) {
+					fprintf(stderr, "%c", intToCmd(programs[proc].pdata[inc].data));
 				}
 				fprintf(stderr, "\n");
 
@@ -236,26 +243,26 @@ int main(int argc, char **argv)
 					outll = 0;
 					memset(outline, ' ', 32256);
 
-					if (procs[vproc] == proc + 1) {
-						outline[procpptrs[vproc]] = 'p';
-						if (procpptrs[vproc] >= outll) {
-							outll = procpptrs[vproc] + 1;
+					if (process[vproc].owner == proc + 1) {
+						outline[process[vproc].pptrs] = 'p';
+						if (process[vproc].pptrs >= outll) {
+							outll = process[vproc].pptrs + 1;
 						}
 
-						if (procdef[vproc]) {
-							if (outline[procdptrs[vproc]] == 'p') {
-								outline[procdptrs[vproc]] = 'b';
+						if (process[vproc].def) {
+							if (outline[process[vproc].dptrs] == 'p') {
+								outline[process[vproc].dptrs] = 'b';
 							} else {
-								outline[procdptrs[vproc]] = 'd';
+								outline[process[vproc].dptrs] = 'd';
 							}
-							if (procdptrs[vproc] >= outll) {
-								outll = procdptrs[vproc] + 1;
+							if (process[vproc].dptrs >= outll) {
+								outll = process[vproc].dptrs + 1;
 							}
 						}
-					} else if (procs[vproc] != 0 && !procdef[vproc]) {
-						outline[procdptrs[vproc]] = 'd';
-						if (procdptrs[vproc] >= outll) {
-							outll = procdptrs[vproc] + 1;
+					} else if (process[vproc].owner != 0 && !process[vproc].def) {
+						outline[process[vproc].dptrs] = 'd';
+						if (process[vproc].dptrs >= outll) {
+							outll = process[vproc].dptrs + 1;
 						}
 					}
 
@@ -272,8 +279,8 @@ int main(int argc, char **argv)
 		}
 
 		for (proc = 0; proc < procc; proc++) {
-			if (procs[proc]) {
-				if ((winner = execcmd(proc, procs[proc], &procpptrs[proc], &procdptrs[proc]))) {
+			if (process[proc].owner) {
+				if ((winner = execcmd(proc, process[proc].owner, &process[proc].pptrs, &process[proc].dptrs))) {
 					if (outt) {
 						fprintf(stderr, "\n");
 					}
@@ -287,8 +294,8 @@ int main(int argc, char **argv)
 		alive[0] = 0;
 		alive[1] = 0;
 		for (proc = 0; proc < procc; proc++) {
-			if (procs[proc]) {
-				alive[procs[proc]-1] = 1;
+			if (process[proc].owner) {
+				alive[process[proc].owner-1] = 1;
 			}
 		}
 		if (!alive[0]) {
@@ -402,17 +409,17 @@ int execcmd(int procnum, unsigned char procowner, int *pptr, int *dptr)
 	int procedits;
 	int depth;
 
-	if (procdef[procnum]) {
+	if (process[procnum].def) {
 		procedits = procowner - 1;
 	} else {
 		procedits = !(procowner - 1);
 	}
 
-	switch (progs[procowner-1][*pptr]) {
+	switch (programs[procowner-1].pdata[*pptr].data) {
 	case CMD_INC:
-		progMods[procedits][*dptr]++;
-		if (progMods[procedits][*dptr] >= CMD_CNT) {
-			progMods[procedits][*dptr] = 0;
+		programs[procedits].pdata[*dptr].mods++;
+		if (programs[procedits].pdata[*dptr].mods >= CMD_CNT) {
+			programs[procedits].pdata[*dptr].mods = 0;
 		}
 		break;
 
@@ -424,8 +431,8 @@ int execcmd(int procnum, unsigned char procowner, int *pptr, int *dptr)
 		break;
 	case CMD_RHT:
 		(*dptr)++;
-		if (*dptr >= proglens[0]) {
-			*dptr -= proglens[0];
+		if (*dptr >= programs[0].len) {
+			*dptr -= programs[0].len;
 		}
 		break;
 
@@ -435,35 +442,35 @@ int execcmd(int procnum, unsigned char procowner, int *pptr, int *dptr)
 		break;
 
 	case CMD_COM:
-		progs[procedits][*dptr] = progMods[procedits][*dptr];
+		programs[procedits].pdata[*dptr].data = programs[procedits].pdata[*dptr].mods;
 		/* if you commit a defect, you defect! */
-		if (progs[procedits][*dptr] == CMD_DEF) {
-			procdef[procnum] = !procdef[procnum];
+		if (programs[procedits].pdata[*dptr].data == CMD_DEF) {
+			process[procnum].def = !process[procnum].def;
 			*dptr = *pptr;
 		}
 		/* perhaps make commit only work once? */
 		break;
 	case CMD_UNC:
-		progMods[procedits][*dptr] = progs[procedits][*dptr];
+		programs[procedits].pdata[*dptr].mods = programs[procedits].pdata[*dptr].data;
 		break;
 
 	case CMD_L1O:
-		if (!progMods[procedits][*dptr]) {
+		if (!programs[procedits].pdata[*dptr].mods) {
 			/* find the counterpart */
 			depth = 0;
 			origpptr = *pptr;
 			(*pptr)++;
-			while (progs[procowner-1][*pptr] != CMD_L1C ||
+			while (programs[procowner-1].pdata[*pptr].data != CMD_L1C ||
 			       depth != 0) {
-				if (progs[procowner-1][*pptr] == CMD_L1O) {
+				if (programs[procowner-1].pdata[*pptr].data == CMD_L1O) {
 					depth++;
 				}
-				if (progs[procowner-1][*pptr] == CMD_L1C) {
+				if (programs[procowner-1].pdata[*pptr].data == CMD_L1C) {
 					depth--;
 				}
 				(*pptr)++;
 
-				if (*pptr >= proglens[0]) {
+				if (*pptr >= programs[0].len) {
 					/* our loop-end was evicerated! */
 					*pptr = origpptr;
 					break;
@@ -479,12 +486,12 @@ int execcmd(int procnum, unsigned char procowner, int *pptr, int *dptr)
 		if (*pptr < 0) {
 			*pptr = 0;
 		}
-		while (progs[procowner-1][*pptr] != CMD_L1O ||
+		while (programs[procowner-1].pdata[*pptr].data != CMD_L1O ||
 		       depth != 0) {
-			if (progs[procowner-1][*pptr] == CMD_L1O) {
+			if (programs[procowner-1].pdata[*pptr].data == CMD_L1O) {
 				depth++;
 			}
-			if (progs[procowner-1][*pptr] == CMD_L1C) {
+			if (programs[procowner-1].pdata[*pptr].data == CMD_L1C) {
 				depth--;
 			}
 			(*pptr)--;
@@ -502,8 +509,8 @@ int execcmd(int procnum, unsigned char procowner, int *pptr, int *dptr)
 		/* loop through every proc */
 		fnd = 0;
 		for (i = 0; i < procc; i++) {
-			if (procs[i] && procs[i] != procowner) {
-				if (procpptrs[i] == *dptr) {
+			if (process[i].owner && process[i].owner != procowner) {
+				if (process[i].pptrs == *dptr) {
 					/* got em */
 					fnd = 1;
 				}
@@ -514,17 +521,17 @@ int execcmd(int procnum, unsigned char procowner, int *pptr, int *dptr)
 			depth = 0;
 			origpptr = *pptr;
 			(*pptr)++;
-			while (progs[procowner-1][*pptr] != CMD_L2C ||
+			while (programs[procowner-1].pdata[*pptr].data != CMD_L2C ||
 			       depth != 0) {
-				if (progs[procowner-1][*pptr] == CMD_L2O) {
+				if (programs[procowner-1].pdata[*pptr].data == CMD_L2O) {
 					depth++;
 				}
-				if (progs[procowner-1][*pptr] == CMD_L2C) {
+				if (programs[procowner-1].pdata[*pptr].data == CMD_L2C) {
 					depth--;
 				}
 				(*pptr)++;
 
-				if (*pptr >= proglens[0]) {
+				if (*pptr >= programs[0].len) {
 					/* our loop-end was evicerated! */
 					*pptr = origpptr;
 					break;
@@ -540,12 +547,12 @@ int execcmd(int procnum, unsigned char procowner, int *pptr, int *dptr)
 		if (*pptr < 0) {
 			*pptr = 0;
 		}
-		while (progs[procowner-1][*pptr] != CMD_L2O ||
+		while (programs[procowner-1].pdata[*pptr].data != CMD_L2O ||
 		       depth != 0) {
-			if (progs[procowner-1][*pptr] == CMD_L2O) {
+			if (programs[procowner-1].pdata[*pptr].data == CMD_L2O) {
 				depth++;
 			}
-			if (progs[procowner-1][*pptr] == CMD_L2C) {
+			if (programs[procowner-1].pdata[*pptr].data == CMD_L2C) {
 				depth--;
 			}
 			(*pptr)--;
@@ -561,15 +568,15 @@ int execcmd(int procnum, unsigned char procowner, int *pptr, int *dptr)
 
 	case CMD_L3O:
 		/* start a new proc! */
-		if (!progSpent[procowner-1][*pptr]) {
-			procs[procc] = procowner;
-			procpptrs[procc] = *pptr + 1;
-			procdptrs[procc] = *dptr;
-			procdef[procc] = procdef[procnum];
+		if (!programs[procowner-1].pdata[*pptr].spent) {
+			process[procc].owner = procowner;
+			process[procc].pptrs = *pptr + 1;
+			process[procc].dptrs = *dptr;
+			process[procc].def = process[procnum].def;
 
 			procc++;
 
-			progSpent[procowner-1][*pptr] = 1;
+			programs[procowner-1].pdata[*pptr].spent = 1;
 		}
 
 		/* now this proc needs to skip to the end */
@@ -577,17 +584,17 @@ int execcmd(int procnum, unsigned char procowner, int *pptr, int *dptr)
 		depth = 0;
 		origpptr = *pptr;
 		(*pptr)++;
-		while (progs[procowner-1][*pptr] != CMD_L3C ||
+		while (programs[procowner-1].pdata[*pptr].data != CMD_L3C ||
 		       depth != 0) {
-			if (progs[procowner-1][*pptr] == CMD_L3O) {
+			if (programs[procowner-1].pdata[*pptr].data == CMD_L3O) {
 				depth++;
 			}
-			if (progs[procowner-1][*pptr] == CMD_L3C) {
+			if (programs[procowner-1].pdata[*pptr].data == CMD_L3C) {
 				depth--;
 			}
 			(*pptr)++;
 
-			if (*pptr >= proglens[0]) {
+			if (*pptr >= programs[0].len) {
 				/* our loop-end was evicerated! */
 				*pptr = origpptr;
 				break;
@@ -605,12 +612,12 @@ int execcmd(int procnum, unsigned char procowner, int *pptr, int *dptr)
 		if (*pptr < 0) {
 			*pptr = 0;
 		}
-		while (progs[procowner-1][*pptr] != CMD_L3O ||
+		while (programs[procowner-1].pdata[*pptr].data != CMD_L3O ||
 		       depth != 0) {
-			if (progs[procowner-1][*pptr] == CMD_L3O) {
+			if (programs[procowner-1].pdata[*pptr].data == CMD_L3O) {
 				depth++;
 			}
-			if (progs[procowner-1][*pptr] == CMD_L3C) {
+			if (programs[procowner-1].pdata[*pptr].data == CMD_L3C) {
 				depth--;
 			}
 			(*pptr)--;
@@ -629,25 +636,25 @@ int execcmd(int procnum, unsigned char procowner, int *pptr, int *dptr)
 	case CMD_OKB:
 		/* sorta boom! */
 		if (procnum < 2) {
-			procs[procnum] = 0;
+			process[procnum].owner = 0;
 		} else {
 			/* only bomb if it's the last command of a thread */
-			if (progs[procowner-1][(*pptr)+1] == CMD_L3C) {
-				procs[procnum] = 0;
+			if (programs[procowner-1].pdata[(*pptr)+1].data == CMD_L3C) {
+				process[procnum].owner = 0;
 			}
 		}
 		break;
 
 	case CMD_DEF:
 		/* defect - edit your own program */
-		procdef[procnum] = !procdef[procnum];
+		process[procnum].def = !process[procnum].def;
 		*dptr = *pptr;
 		break;
 	}
 
 
 	(*pptr)++;
-	if (*pptr >= proglens[0]) {
+	if (*pptr >= programs[0].len) {
 		*pptr = 0;
 	}
 
