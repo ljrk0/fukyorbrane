@@ -1,12 +1,22 @@
+ifeq ($(WINBUILD),1)
+CC=x86_64-w64-mingw32-gcc
+EXESUFF=.exe
+endif
+
+ifndef CC
 CC=gcc
+endif
+
+$(info "$$(CC) is [$(CC)]")
+
 CFLAGS=-std=c99
 CFLAGS+=-Wall -Wpedantic -Wextra -Wshadow -Wconversion -Wno-sign-compare
 CFLAGS+=-Werror
 
 ifeq ($(DEBUG),1)
-	CFLAGS+=-Og -g
+CFLAGS+=-Og -g
 else
-	CFLAGS+=-O2
+CFLAGS+=-O2
 endif
 
 CFILES=fukyorbrane.c
@@ -15,16 +25,18 @@ OFILES=fukyorbrane.o
 
 .SUFFIXES: .c .o
 
-all: fukyorbrane
+EXEFILES=$(addsuffix $(EXESUFF), fukyorbrane)
 
-fukyorbrane: $(OFILES)
-	$(CC) $(CFLAGS) $(OFILES) -o fukyorbrane
+all: $(EXEFILES)
+
+$(EXEFILES): $(OFILES)
+	$(CC) $(CFLAGS) $(OFILES) -o $@
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
 
 clean:
-	rm -f $(OFILES) fukyorbrane
+	rm -f $(OFILES) $(EXEFILES)
 
 
 FILES=$(wildcard fyb_src/*.fyb)
