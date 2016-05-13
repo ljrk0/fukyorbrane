@@ -233,16 +233,21 @@ int main(int argc, char **argv)
 			for (proc = 0; proc < 2; proc++) {
 
 				fprintf(stderr, "==============================\n");
-				fprintf(stderr, "%s\n\t", argv[proc + 1]);
+				fprintf(stderr, "%s (%d)\n\t", argv[proc + 1], proc+1);
+				/* output sourcecode */
 				for (inc = 0; inc < programs[0].len; inc++) {
 					fprintf(stderr, "%c", intToCmd(programs[proc].pdata[inc].data));
 				}
 				fprintf(stderr, "\n");
 
+				/* go through list of processes and ... TODO */
 				for (vproc = 0; vproc < procc; vproc++) {
+					/* position of the '\0' character
+					 * terminating the outline */
 					outll = 0;
 					memset(outline, ' ', 32256);
 
+					/* if current process is owned by current program */
 					if (process[vproc].owner == proc + 1) {
 						outline[process[vproc].pptrs] = 'p';
 						if (process[vproc].pptrs >= outll) {
@@ -250,6 +255,7 @@ int main(int argc, char **argv)
 						}
 
 						if (process[vproc].def) {
+							/* if process[vproc].pptrs == process[vproc].dptrs ? */
 							if (outline[process[vproc].dptrs] == 'p') {
 								outline[process[vproc].dptrs] = 'b';
 							} else {
@@ -259,6 +265,8 @@ int main(int argc, char **argv)
 								outll = process[vproc].dptrs + 1;
 							}
 						}
+					/* if the current process is NOT owned by the current program
+					 * and also is NOT defected */
 					} else if (process[vproc].owner != 0 && !process[vproc].def) {
 						outline[process[vproc].dptrs] = 'd';
 						if (process[vproc].dptrs >= outll) {
@@ -284,7 +292,7 @@ int main(int argc, char **argv)
 					if (outt) {
 						fprintf(stderr, "\n");
 					}
-					printf("%s wins!\n", argv[winner]);
+					printf("%s (%d) wins!\n", argv[winner], winner);
 					return 0;
 				}
 			}
