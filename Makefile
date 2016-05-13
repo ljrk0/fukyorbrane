@@ -1,47 +1,44 @@
-ifeq ($(WINBUILD),1)
-CC=x86_64-w64-mingw32-gcc
+# Convenienve for setting a windows build
+ifeq ($(WIN),1)
 EXESUFF=.exe
+CC=x86_64-w64-mingw32-cc
 endif
 
-ifndef CC
-CC=gcc
-endif
+# Suffix for executable (eg .exe when building for Windows)
+EXESUFF ?=
+CC ?= gcc
 
-$(info "$$(CC) is [$(CC)]")
+#$(info "$$(CC) is [$(CC)]")
 
-CFLAGS=-std=c99
-CFLAGS+=-Wall -Wpedantic -Wextra -Wshadow -Wconversion -Wno-sign-compare
-CFLAGS+=-Werror
+CFLAGS ?= -std=c99
+CFLAGS += -Wall -Wpedantic -Wextra -Wshadow -Wconversion
+CFLAGS += -Werror
 
 ifeq ($(DEBUG),1)
-CFLAGS+=-Og -g
+CFLAGS += -Og -g
 else
-CFLAGS+=-O2
+CFLAGS += -O2
 endif
 
-CFILES=fukyorbrane.c
-
-OFILES=fukyorbrane.o
-
+# Use implicit rules only for these suffixes
+.SUFFIXES:
 .SUFFIXES: .c .o
 
+OFILES=fukyorbrane.o
 EXEFILES=$(addsuffix $(EXESUFF), fukyorbrane)
 
 all: $(EXEFILES)
 
 $(EXEFILES): $(OFILES)
-	$(CC) $(CFLAGS) $(OFILES) -o $@
-
-.c.o:
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(LDFLAGS) $(OFILES) -o $@
 
 clean:
-	rm -f $(OFILES) $(EXEFILES)
+	$(RM) $(OFILES) $(EXEFILES)
 
 
 FILES=$(wildcard fyb_src/*.fyb)
-test:
-	@$(foreach f, $(FILES), $(MAKE) F=$f test2;)
+test: $(EXEFILES)
+	@$(foreach f, $(FILES), $(MAKE) F=$f _test;)
 
-test2:
-	@$(foreach f, $(FILES), ./fukyorbrane $f $F;)
+_test:
+	@$(foreach f, $(FILES), ./$(EXEFILES) $f $F;)
