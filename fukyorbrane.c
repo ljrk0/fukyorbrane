@@ -418,6 +418,10 @@ int execcmd(int procnum)
 	int procedits;
 	int depth;
 
+	/**
+	 * if the process is defected, edit the own program, otherwise
+	 * edit enemy program
+	 */
 	if (process[procnum].def) {
 		procedits = procowner - 1;
 	} else {
@@ -426,6 +430,9 @@ int execcmd(int procnum)
 
 	switch (programs[procowner-1].pdata[*pptr].data) {
 	case CMD_INC:
+		/**
+		 * increase the modified instruction, loop if necessary
+		 */
 		programs[procedits].pdata[*dptr].mods++;
 		if (programs[procedits].pdata[*dptr].mods >= CMD_CNT) {
 			programs[procedits].pdata[*dptr].mods = 0;
@@ -451,7 +458,8 @@ int execcmd(int procnum)
 		break;
 
 	case CMD_COM:
-		programs[procedits].pdata[*dptr].data = programs[procedits].pdata[*dptr].mods;
+		programs[procedits].pdata[*dptr].data
+			= programs[procedits].pdata[*dptr].mods;
 		/* if you commit a defect, you defect! */
 		if (programs[procedits].pdata[*dptr].data == CMD_DEF) {
 			process[procnum].def = !process[procnum].def;
@@ -460,30 +468,39 @@ int execcmd(int procnum)
 		/* perhaps make commit only work once? */
 		break;
 	case CMD_UNC:
-		programs[procedits].pdata[*dptr].mods = programs[procedits].pdata[*dptr].data;
+		programs[procedits].pdata[*dptr].mods
+			= programs[procedits].pdata[*dptr].data;
 		break;
 
 	case CMD_L1O:
-		if (!programs[procedits].pdata[*dptr].mods) {
-			/* find the counterpart */
-			depth = 0;
-			origpptr = *pptr;
+		/**
+		 * As long as pointer on enemy program doesn't point to NOP
+		 * continue (ie. loop). Otherwise try to find the counterpart
+		 * and just continue from there.
+		 *
+		 * If there's none, just ignore the opened loop.
+		 */
+		if (programs[procedits].pdata[*dptr].mods) break;
+		/* find the counterpart */
+		depth = 0;
+		origpptr = *pptr;
+		(*pptr)++;
+		while (programs[procowner-1].pdata[*pptr].data != CMD_L1C
+				|| depth != 0) {
+			if (programs[procowner-1].pdata[*pptr].data
+					== CMD_L1O) {
+				depth++;
+			}
+			if (programs[procowner-1].pdata[*pptr].data
+					== CMD_L1C) {
+				depth--;
+			}
 			(*pptr)++;
-			while (programs[procowner-1].pdata[*pptr].data != CMD_L1C ||
-			       depth != 0) {
-				if (programs[procowner-1].pdata[*pptr].data == CMD_L1O) {
-					depth++;
-				}
-				if (programs[procowner-1].pdata[*pptr].data == CMD_L1C) {
-					depth--;
-				}
-				(*pptr)++;
 
-				if (*pptr >= programs[0].len) {
-					/* our loop-end was evicerated! */
-					*pptr = origpptr;
-					break;
-				}
+			if (*pptr >= programs[0].len) {
+				/* our loop-end was evicerated! */
+				*pptr = origpptr;
+				break;
 			}
 		}
 		break;
@@ -495,12 +512,14 @@ int execcmd(int procnum)
 		if (*pptr < 0) {
 			*pptr = 0;
 		}
-		while (programs[procowner-1].pdata[*pptr].data != CMD_L1O ||
-		       depth != 0) {
-			if (programs[procowner-1].pdata[*pptr].data == CMD_L1O) {
+		while (programs[procowner-1].pdata[*pptr].data != CMD_L1O
+				|| depth != 0) {
+			if (programs[procowner-1].pdata[*pptr].data
+					== CMD_L1O) {
 				depth++;
 			}
-			if (programs[procowner-1].pdata[*pptr].data == CMD_L1C) {
+			if (programs[procowner-1].pdata[*pptr].data
+					== CMD_L1C) {
 				depth--;
 			}
 			(*pptr)--;
