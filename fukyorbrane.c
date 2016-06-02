@@ -223,11 +223,7 @@ int main(int argc, char **argv)
 
 		/* output the board if we're verbose */
 		if (verbose) {
-			int vproc;
-			char *outline;
-			int outll;
-
-			outline = (char *) malloc(MAX_PROG_LEN * sizeof(char));
+			char outline[MAX_PROG_LEN];
 
 			for (int prog = 0; prog < 2; prog++) {
 
@@ -239,13 +235,14 @@ int main(int argc, char **argv)
 				}
 				fprintf(stderr, "\n");
 
-				/* go through list of processes and ...
-				 * print position of data & program pointers
+				/**
+				 * go through list of processes and print
+				 * position of data & program pointers
 				 */
-				for (vproc = 0; vproc < procc; vproc++) {
+				for (int vproc = 0; vproc < procc; vproc++) {
 					/* position of the '\0' character
 					 * terminating the outline */
-					outll = 0;
+					int outll = 0;
 					memset(outline, ' ', 32256);
 
 					/* if current process is owned by current program */
@@ -281,8 +278,6 @@ int main(int argc, char **argv)
 			}
 
 			fprintf(stderr, "==============================\n\n");
-
-			free(outline);
 		} else if (outt) {
 			fprintf(stderr, "%ld          \r", turnn);
 		}
