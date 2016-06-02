@@ -30,12 +30,23 @@ COMMAND | VALUE | EFFECT
     `]` |     9 | end of a `[` loop
     `{` |    10 | loop while the opponent does not have a program pointer at the current location
     `}` |    11 | end of a `}` loop
-    `:` |    12 | start a thread.  The parent thread will skip over the matching `;`, the child will loop between this and the matching `;`<br>NOTE: any given `:` will only fork once, then it's spent
+    `:` |    12 | start a thread.  The parent thread will skip over the matching `;`, the child will loop between this and the matching `;`<br>*NOTE:* any given `:` will only fork once, then it's spent
     `;` |    13 | end of a `;` loop
-    N/A |    14 | **BOMB!**  This is an important one.  If *any* program pointer (even if you have several from threading) hits this, you lose!<br>**NOTE:** You cannot set a bomb in your own program, so it doesn't have a character.
-    `*` |    15 | exit - end the current thread.  If you're not in the topmost thread, you can only exit at the very end of a thread: `:......*;`<br>**NOTE:** If the current thread is the only thread, you lose!
-    `@` |    16 | defect: instead of editing the opponent's program buffer, this thread will edit your own.  You can later defect back.<br>**NOTE:** If you commit a defect, *you defect* (this is to try to prevent pure manglers from being effective)
+    N/A |    14 | **BOMB!**  This is an important one.  If *any* program pointer (even if you have several from threading) hits this, you lose!<br>*NOTE:* You cannot set a bomb in your own program, so it doesn't have a character.
+    `*` |    15 | exit - end the current thread.  If you're not in the topmost thread, you can only exit at the very end of a thread: `:......*;`<br>*NOTE:* If the current thread is the only thread, you lose!
+    `@` |    16 | defect: instead of editing the opponent's program buffer, this thread will edit your own.  You can later defect back.<br>*NOTE:* If you commit a defect, *you defect* (this is to try to prevent pure manglers from being effective)
 
+
+### Notes on special behavior
+
+ - If a closing loop is found with no matching opening loop it will not only
+   "ignore" the instruction but "stumble", that is, ignore the next instruction,
+   too! This can be quite important for the game.  
+   The reasonign behind this could have been for making sure programs run better
+   when changed runtime, ie. at least terminate. It also could've just been a
+   programming error.  
+   *NOTE:* this "feature" might be removed in a future,
+   "API-breaking" version of the program.
 
 ## Simple Stragegy
 One of the most simple FukYorBrane programs is:
@@ -45,13 +56,15 @@ One of the most simple FukYorBrane programs is:
 ```
 
 This very simply:
+
  * `{>}`: tries to find the opponent's program pointer
  * `[+]`: blanks the value where you found it (as in BrainFuck, but looping values)
  * `+++++++++++++!`: sets the value there to 14 (bomb)
 
-This simple program isn't very effective, as it has tight loops.  Tight loops are generally best
-avoided, because of how bombs are usually placed.  If the enemy finds you and places a bomb, and
-you're in a tight loop, you'll hit the bomb long before you can do something about the enemy.
+This simple program isn't very effective, as it has tight loops.  Tight loops
+are generally best avoided, because of how bombs are usually placed.  If the
+enemy finds you and places a bomb, and you're in a tight loop, you'll hit the
+bomb long before you can do something about the enemy.
 
 A slightly more complex FukYorBrane program:
 
@@ -62,29 +75,39 @@ A slightly more complex FukYorBrane program:
 ```
 
 Let's break this down:
+
  * `>}`: This is the same as before (and still a tight loop, which is bad).
- * `[+[+[+[+[+[+[+[+[+[+[+[+[+[+[+]]]]]]]]]]]]]]]`:This is one way to zero a value without a tight loop
+ * `[+[+[+[+[+[+[+[+[+[+[+[+[+[+[+]]]]]]]]]]]]]]]`:This is one way to zero a
+   value without a tight loop
  * `+++++++++++++!`: set the bomb
  * `>`: since we already have a bomb here, go on
- * `%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%`...: by setting a lot of nops, we make the :; loop less tight
+ * `%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%`...: by setting a lot of nops, we
+    make the :; loop less tight
  * `:@[>+++]!;`: this is a simple bomb finding algorithm:
-  * it defects,
-  * then loops,
-  * nop'ing any bombs
-  * and committing if they were a bomb
+    * it defects,
+    * then loops,
+    * nop'ing any bombs
+    * and committing if they were a bomb
 
-Because you can defect, you can have a self-replicating program.  But that's up to future hackers to produce ;)
+Because you can defect, you can have a self-replicating program.  But that's up
+to future hackers to produce ;)
 
 ## Program Styles
 Gregor has only written two major styles of programs:
+
  * Manglers and
  * Seekers.
 
 Of Manglers, there are several subtypes:
- * Pure mangler: All this does is destroy code with no attempt at any logic.  Very quick.  It's also the shortest code: `+!>`
- * Logic mangler: Usually look for loops, disable loop beginnings or ends.  That way, program pointers fly through the entire program, so you can bomb anywhere.
 
-Seekers basically seek out program pointers (`{>}`), then try to bomb where the program pointer was, since the pointer is likely to come back to the same point.  Easily catchable with a false thread.
+ * Pure mangler: All this does is destroy code with no attempt at any logic.
+   Very quick.  It's also the shortest code: `+!>`
+ * Logic mangler: Usually look for loops, disable loop beginnings or ends.  That
+   way, program pointers fly through the entire program, so you can bomb anywhere.
+
+Seekers basically seek out program pointers (`{>}`), then try to bomb where the
+program pointer was, since the pointer is likely to come back to the same point.
+Easily catchable with a false thread.
 
 ## Looping
 It is worth mentioning how many ticks different loop styles take.
@@ -113,10 +136,12 @@ A:B;B;B;B;B;B`...
 ```
 
 
-Important to note is that while `[` and `{` will take a tick every loop, `:` will take a tick only on the first loop.
+Important to note is that while `[` and `{` will take a tick every loop, `:`
+will take a tick only on the first loop.
 
-Where loops are unmatched, any applicable jump will be skipped.  That is, in a situation like `[A[B]`,
-where the `[` before `A` doesn't have a match, if it hit that `[` and decided to jump, it would not.  
+Where loops are unmatched, any applicable jump will be skipped.  That is, in a
+situation like `[A[B]`, where the `[` before `A` doesn't have a match, if it hit
+that `[` and decided to jump, it would not.  
 It would run like this:
 
 ```
@@ -130,11 +155,16 @@ The situation is similar for ending brackets.  This: `[A]B]C`, would run like th
 [A][A][A]...B]C
 ```
 
-If you produce a `:` somewhere where one has already existed, it's "spent" status will be maintained.
-That is, if one program did this: `:A;B`, and later, the second program turned that into `%A;B`, then yet later, the second program turned it back into `:A;B`.
-The `:` before the `A` would still be spent, and would not fork again.  If a `:` is produced somewhere
-where there was not one before, it defaults to unspent.
+If you produce a `:` somewhere where one has already existed, it's "spent"
+status will be maintained. That is, if one program did this: `:A;B`, and later,
+the second program turned that into `%A;B`, then yet later, the second program
+turned it back into `:A;B`. The `:` before the `A` would still be spent, and
+would not fork again.  If a `:` is produced somewhere where there was not one
+before, it defaults to unspent.
 
 
 ### Licensing and original authorship
-The original code for FukYorBrane was retrieved from [Voxelperfect](http://esoteric.voxelperfect.net/files/fyb/), it is licensed under the [MIT License](https://opensource.org/licenses/MIT).
+The original code for FukYorBrane was retrieved from
+[Voxelperfect](http://esoteric.voxelperfect.net/files/fyb/),
+it is licensed under the
+[MIT License](https://opensource.org/licenses/MIT).
