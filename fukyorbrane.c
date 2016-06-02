@@ -80,14 +80,14 @@ unsigned char outt = 0;
 #define CMD_OUT 5
 #define CMD_COM 6 /* commit */
 #define CMD_UNC 7 /* uncommit */
-#define CMD_L1O 8 /* L1 = loop1 = [] = value at pointer != 0 */
+#define CMD_L1O 8 /* "Loop #1"; []-Loop: Value at data-pointer != 0 */
 #define CMD_L1C 9
-#define CMD_L2O 10 /* L2 = loop2 = {} = enemy program pointer is NOT at data pointer */
+#define CMD_L2O 10 /* {}-Loop: Enemy program pointer is NOT at data pointer */
 #define CMD_L2C 11
-#define CMD_L3O 12 /* L3 = loop3 = :; = fork */
+#define CMD_L3O 12 /* :;-Loop: Fork */
 #define CMD_L3C 13
 #define CMD_BOM 14
-#define CMD_OKB 15 /* "OK" bomb - for killing your own process, doesn't declare enemy winner */
+#define CMD_OKB 15 /* "OK bomb"; Kill own process w/o declaring enemy winner */
 #define CMD_DEF 16 /* defect - edit your own program */
 #define CMD_CNT 17
 
@@ -108,7 +108,6 @@ int execcmd(int procnum);
 int main(int argc, char **argv)
 {
 	FILE *fps[2];
-	int prog, inc, proc;
 	long turnn;
 
 	if (argc <= 2) {
@@ -137,7 +136,7 @@ int main(int argc, char **argv)
 	}
 
 	if (argv[3]) {
-		for (proc = 0; argv[3][proc]; proc++) {
+		for (int proc = 0; argv[3][proc]; proc++) {
 			switch (argv[3][proc]) {
 			case 'v':
 				verbose = 1;
@@ -163,29 +162,31 @@ int main(int argc, char **argv)
 	}
 
 	/* parse input */
-	for (prog = 0; prog <= 1; prog++) {
+	for (int prog = 0; prog <= 1; prog++) {
 		int incomment = 0;
 		programs[prog].len = 0;
 
 		int c = 0;
 		while ((c = getc(fps[prog])) != EOF) {
-			inc = cmdToInt((unsigned char)(c));
+			int cmd = cmdToInt((unsigned char)(c));
+			/* TODO: possibly better error-handling? */
+			if (cmd == -1) continue;
 
-			if (inc == CMD_CIN) {
+			if (cmd == CMD_CIN) {
 				incomment = 1;
-				inc = -1;
+				continue;
 			}
-			if (inc == CMD_COT) {
+			if (cmd == CMD_COT) {
 				incomment = 0;
-				inc = -1;
+				continue;
 			}
 
-			if (inc != -1 && !incomment) {
-				programs[prog].pdata[programs[prog].len].data = inc;
-				programs[prog].pdata[programs[prog].len].mods = inc;
-				programs[prog].pdata[programs[prog].len].spent = 0;
-				programs[prog].len++;
-			}
+			if (incomment) continue;
+
+			programs[prog].pdata[programs[prog].len].data = cmd;
+			programs[prog].pdata[programs[prog].len].mods = cmd;
+			programs[prog].pdata[programs[prog].len].spent = 0;
+			programs[prog].len++;
 		}
 
 		fclose(fps[prog]);
@@ -228,17 +229,19 @@ int main(int argc, char **argv)
 
 			outline = (char *) malloc(MAX_PROG_LEN * sizeof(char));
 
-			for (proc = 0; proc < 2; proc++) {
+			for (int prog = 0; prog < 2; prog++) {
 
 				fprintf(stderr, "==============================\n");
-				fprintf(stderr, "%s (%d)\n\t", argv[proc + 1], proc+1);
+				fprintf(stderr, "%s (%d)\n\t", argv[prog + 1], prog+1);
 				/* output sourcecode */
-				for (inc = 0; inc < programs[0].len; inc++) {
-					fprintf(stderr, "%c", intToCmd(programs[proc].pdata[inc].data));
+				for (int cmd = 0; cmd < programs[0].len; cmd++) {
+					fprintf(stderr, "%c", intToCmd(programs[prog].pdata[cmd].data));
 				}
 				fprintf(stderr, "\n");
 
-				/* go through list of processes and ... TODO */
+				/* go through list of processes and ...
+				 * print position of data & program pointers
+				 */
 				for (vproc = 0; vproc < procc; vproc++) {
 					/* position of the '\0' character
 					 * terminating the outline */
@@ -246,7 +249,7 @@ int main(int argc, char **argv)
 					memset(outline, ' ', 32256);
 
 					/* if current process is owned by current program */
-					if (process[vproc].owner == proc + 1) {
+					if (process[vproc].owner == prog + 1) {
 						outline[process[vproc].pptrs] = 'p';
 						if (process[vproc].pptrs >= outll) {
 							outll = process[vproc].pptrs + 1;
@@ -284,7 +287,7 @@ int main(int argc, char **argv)
 			fprintf(stderr, "%ld          \r", turnn);
 		}
 
-		for (proc = 0; proc < procc; proc++) {
+		for (int proc = 0; proc < procc; proc++) {
 			if (process[proc].owner) {
 				if ((winner = execcmd(proc))) {
 					if (outt) {
@@ -299,7 +302,7 @@ int main(int argc, char **argv)
 		/* see if anybody accidentally quit themselves */
 		alive[0] = 0;
 		alive[1] = 0;
-		for (proc = 0; proc < procc; proc++) {
+		for (int proc = 0; proc < procc; proc++) {
 			if (process[proc].owner) {
 				alive[process[proc].owner-1] = 1;
 			}
