@@ -1,0 +1,7 @@
+(
+ The original example, although actually having a bug as it's only incrementing
+ 13-times, thus committing only a '%' instead of a bomb, it 'works' against
+ itself as Program #2 edits Program #1 in a way that it enables bombing.
+)
+
+{>}[+]+++++++++++++!
