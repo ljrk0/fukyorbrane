@@ -1,4 +1,4 @@
-# Convenienve for setting a windows build
+# Convenience for setting a windows build
 ifeq ($(WIN),1)
 EXESUFF=.exe
 CC=x86_64-w64-mingw32-cc
