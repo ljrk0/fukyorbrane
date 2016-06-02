@@ -534,36 +534,43 @@ int execcmd(int procnum)
 		break;
 
 	case CMD_L2O:
-		/* loop through every proc */
+		/**
+		 * loop through every process and try to find one of the enemy
+		 * whiches program pointer is on the same position as ones own
+		 * data pointer
+		 */
 		fnd = 0;
 		for (i = 0; i < procc; i++) {
-			if (process[i].owner && process[i].owner != procowner) {
+			if (process[i].owner
+					&& process[i].owner != procowner) {
 				if (process[i].pptrs == *dptr) {
 					/* got em */
 					fnd = 1;
 				}
 			}
 		}
-		if (fnd) {
-			/* find the counterpart */
-			depth = 0;
-			origpptr = *pptr;
-			(*pptr)++;
-			while (programs[procowner-1].pdata[*pptr].data != CMD_L2C ||
-			       depth != 0) {
-				if (programs[procowner-1].pdata[*pptr].data == CMD_L2O) {
-					depth++;
-				}
-				if (programs[procowner-1].pdata[*pptr].data == CMD_L2C) {
-					depth--;
-				}
-				(*pptr)++;
+		if (!fnd) break;
 
-				if (*pptr >= programs[0].len) {
-					/* our loop-end was evicerated! */
-					*pptr = origpptr;
-					break;
-				}
+		/* find the counterpart */
+		depth = 0;
+		origpptr = *pptr;
+		(*pptr)++;
+		while (programs[procowner-1].pdata[*pptr].data != CMD_L2C
+				|| depth != 0) {
+			if (programs[procowner-1].pdata[*pptr].data
+					== CMD_L2O) {
+				depth++;
+			}
+			if (programs[procowner-1].pdata[*pptr].data
+					== CMD_L2C) {
+				depth--;
+			}
+			(*pptr)++;
+
+			if (*pptr >= programs[0].len) {
+				/* our loop-end was evicerated! */
+				*pptr = origpptr;
+				break;
 			}
 		}
 		break;
@@ -575,12 +582,14 @@ int execcmd(int procnum)
 		if (*pptr < 0) {
 			*pptr = 0;
 		}
-		while (programs[procowner-1].pdata[*pptr].data != CMD_L2O ||
-		       depth != 0) {
-			if (programs[procowner-1].pdata[*pptr].data == CMD_L2O) {
+		while (programs[procowner-1].pdata[*pptr].data != CMD_L2O
+				|| depth != 0) {
+			if (programs[procowner-1].pdata[*pptr].data
+					== CMD_L2O) {
 				depth++;
 			}
-			if (programs[procowner-1].pdata[*pptr].data == CMD_L2C) {
+			if (programs[procowner-1].pdata[*pptr].data
+					== CMD_L2C) {
 				depth--;
 			}
 			(*pptr)--;
@@ -595,7 +604,7 @@ int execcmd(int procnum)
 		break;
 
 	case CMD_L3O:
-		/* start a new proc! */
+		/* start a new process! */
 		if (!programs[procowner-1].pdata[*pptr].spent) {
 			process[procc].owner = procowner;
 			process[procc].pptrs = *pptr + 1;
@@ -607,7 +616,7 @@ int execcmd(int procnum)
 			programs[procowner-1].pdata[*pptr].spent = 1;
 		}
 
-		/* now this proc needs to skip to the end */
+		/* now this process needs to skip to the end */
 		/* find the counterpart */
 		depth = 0;
 		origpptr = *pptr;
@@ -631,8 +640,12 @@ int execcmd(int procnum)
 
 		break;
 	case CMD_L3C:
-		/* we must be in the child proc, skip to the beginning of this proc
-		   (really, you shouldn't let a proc do this, you should bomb it */
+		/**
+		 * We must be in the child process, skip to the beginning of
+		 * this process (really, you shouldn't let a process do this,
+		 * you should bomb it)
+		 */
+
 		/* find the counterpart */
 		depth = 0;
 		origpptr = *pptr;
@@ -640,12 +653,14 @@ int execcmd(int procnum)
 		if (*pptr < 0) {
 			*pptr = 0;
 		}
-		while (programs[procowner-1].pdata[*pptr].data != CMD_L3O ||
-		       depth != 0) {
-			if (programs[procowner-1].pdata[*pptr].data == CMD_L3O) {
+		while (programs[procowner-1].pdata[*pptr].data != CMD_L3O
+				|| depth != 0) {
+			if (programs[procowner-1].pdata[*pptr].data
+					== CMD_L3O) {
 				depth++;
 			}
-			if (programs[procowner-1].pdata[*pptr].data == CMD_L3C) {
+			if (programs[procowner-1].pdata[*pptr].data
+					== CMD_L3C) {
 				depth--;
 			}
 			(*pptr)--;
@@ -662,14 +677,15 @@ int execcmd(int procnum)
 		/* boom! */
 		return ((!(procowner-1)) + 1);
 	case CMD_OKB:
-		/* sorta boom! */
+		/**
+		 * sorta boom! Kill the current process.
+		 */
 		if (procnum < 2) {
 			process[procnum].owner = 0;
-		} else {
+		} else if (programs[procowner-1].pdata[(*pptr)+1].data
+					== CMD_L3C) {
 			/* only bomb if it's the last command of a thread */
-			if (programs[procowner-1].pdata[(*pptr)+1].data == CMD_L3C) {
-				process[procnum].owner = 0;
-			}
+			process[procnum].owner = 0;
 		}
 		break;
 
