@@ -100,13 +100,10 @@ char intToCmd(int cmd);
 /**
  * Executes a process and checks for a win-condition
  * @param procnum - The process to execute
- * @param procowner - The program to which procnum belongs
- * @param *pptr - The point in the program where procnum's current program is
- * @param *dptr - Same thing with procnum's data
  *
  * @returns - The winner of the current turn, 0 if it's still to be played
  */
-int execcmd(int procnum, unsigned char procowner, int *pptr, int *dptr);
+int execcmd(int procnum);
 
 int main(int argc, char **argv)
 {
@@ -115,21 +112,22 @@ int main(int argc, char **argv)
 	long turnn;
 
 	if (argc <= 2) {
-		fprintf(stderr, "\n\nCopyright (c) 2005 Gregor Richards\n\n"
-			"Permission is hereby granted, free of charge, to any person obtaining a copy of\n"
-			"this software and associated documentation files (the \"Software\"), to deal in\n"
-			"the Software without restriction, including without limitation the rights to\n"
-			"use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies\n"
-			"of the Software, and to permit persons to whom the Software is furnished to do\n"
-			"so, subject to the following conditions:\n\n"
-			"The above copyright notice and this permission notice shall be included in all\n"
-			"copies or substantial portions of the Software.\n\n"
-			"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n"
-			"IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\n"
-			"FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\n"
-			"COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\n"
-			"IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\n"
-			"CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n\n\n");
+		fprintf(stderr,
+"Copyright (c) 2005 Gregor Richards\n\n"
+"Permission is hereby granted, free of charge, to any person obtaining a copy of\n"
+"this software and associated documentation files (the \"Software\"), to deal in\n"
+"the Software without restriction, including without limitation the rights to\n"
+"use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies\n"
+"of the Software, and to permit persons to whom the Software is furnished to do\n"
+"so, subject to the following conditions:\n\n"
+"The above copyright notice and this permission notice shall be included in all\n"
+"copies or substantial portions of the Software.\n\n"
+"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n"
+"IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\n"
+"FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\n"
+"COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\n"
+"IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\n"
+"CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n\n\n");
 
 		fprintf(stderr, "Use: %s <program 1> <program 2> [options]\n"
 			"   Options:\n"
@@ -288,7 +286,7 @@ int main(int argc, char **argv)
 
 		for (proc = 0; proc < procc; proc++) {
 			if (process[proc].owner) {
-				if ((winner = execcmd(proc, process[proc].owner, &process[proc].pptrs, &process[proc].dptrs))) {
+				if ((winner = execcmd(proc))) {
 					if (outt) {
 						fprintf(stderr, "\n");
 					}
@@ -411,8 +409,11 @@ char intToCmd(int cmd)
 	return ' ';
 }
 
-int execcmd(int procnum, unsigned char procowner, int *pptr, int *dptr)
+int execcmd(int procnum)
 {
+	unsigned char procowner = process[procnum].owner;
+	int *pptr = &process[procnum].pptrs;
+	int *dptr = &process[procnum].dptrs;
 	int i, fnd, origpptr;
 	int procedits;
 	int depth;
