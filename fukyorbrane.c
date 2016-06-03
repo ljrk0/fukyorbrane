@@ -130,8 +130,8 @@ argv[0]);
 	unsigned char outt = 0;
 
 	if (argv[3]) {
-		for (int proc = 0; argv[3][proc]; proc++) {
-			switch (argv[3][proc]) {
+		for (int i = 0; argv[3][i]; i++) {
+			switch (argv[3][i]) {
 			case 'v':
 				verbose = 1;
 				break;
