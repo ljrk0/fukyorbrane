@@ -108,21 +108,13 @@ int main(int argc, char **argv)
 
 	if (argc <= 2) {
 		fprintf(stderr,
-"Copyright (c) 2005 Gregor Richards\n\n"
-"Permission is hereby granted, free of charge, to any person obtaining a copy of\n"
-"this software and associated documentation files (the \"Software\"), to deal in\n"
-"the Software without restriction, including without limitation the rights to\n"
-"use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies\n"
-"of the Software, and to permit persons to whom the Software is furnished to do\n"
-"so, subject to the following conditions:\n\n"
-"The above copyright notice and this permission notice shall be included in all\n"
-"copies or substantial portions of the Software.\n\n"
-"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n"
-"IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\n"
-"FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\n"
-"COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\n"
-"IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\n"
-"CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n\n\n");
+"%s (FukYorBrane)\n"
+"Copyright (c) 2016 Leonard König\n"
+"Copyright (c) 2005 Gregor Richards\n"
+"This is free software; see the source for copying conditions.  There is NO\n"
+"warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
+"\n\n",
+argv[0]);
 
 		fprintf(stderr, "Use: %s <program 1> <program 2> [options]\n"
 			"   Options:\n"
