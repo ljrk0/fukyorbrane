@@ -162,6 +162,42 @@ turned it back into `:A;B`. The `:` before the `A` would still be spent, and
 would not fork again.  If a `:` is produced somewhere where there was not one
 before, it defaults to unspent.
 
+## Building & Running
+
+### Building for ...
+ - Linux:  
+   Run GNU Make in the root directory of the project. Required tools:
+    - GNU Make (if you want to use the Makefile)
+    - GCC/Clang (any C99-compatible compiler should do)
+    - GLibC (any C99-Std C lib should do, too)
+ - OS X:  
+   See instructions for Linux. If you have not set up developer tools yet, it
+   will prompt you to install these.
+ - Windows:  
+   There are three ways of compiling for Windows:
+    - cross-compiling on Linux:
+      Install the MinGW toolchain for the distro of your choice and in the first
+      few lines of the Makefile edit the `CC`-variable as needed, eg.  
+      `CC = x86_64-w64-mingw32-cc`  
+      Now Run `$ make clean && make WIN=1`
+    - Installing MinGW on a Windows machine, adding the compiler to your
+      `%PATH%`-variable and editing `CC` to match your needs.
+    - Import the `fukyorbrane.c` into Visual Studio and compile it *with the C++
+      compiler*. The MS Visual C compiler does not support many modern C
+      features we use.  
+      The most easy way to compile in "C++ -Mode" is to rename the file to
+      `fukyorbrane.cc` -- this however will link against VSC++RT and not against
+      the VSCRT.
+
+### Running:
+
+To run `program1.fyb` against `program2.fyb`:  
+`$ fukyorbrane [program1.fyb] [program2.fyb] [v/t]`
+
+ - first, second param: the FukYorBrane programs
+ - `v`: Output 'verbose' board, ie. complete source-code and
+   program-/data-pointers each round.
+ - `t`: Output turn number
 
 ### Licensing and original authorship
 The original code for FukYorBrane was retrieved from
