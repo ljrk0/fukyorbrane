@@ -26,6 +26,10 @@
 #include <string.h>
 #include <stdbool.h>
 
+#ifndef GIT_REV
+#define GIT_REV "(unknown version)"
+#endif
+
 #ifndef MAX_PROG_LEN
 #define MAX_PROG_LEN 32256
 #endif
@@ -108,13 +112,13 @@ int main(int argc, char **argv)
 
 	if (argc <= 2) {
 		fprintf(stderr,
-"%s (FukYorBrane)\n"
+"%s (FukYorBrane) %s\n"
 "Copyright (c) 2016 Leonard König\n"
 "Copyright (c) 2005 Gregor Richards\n"
 "This is free software; see the source for copying conditions.  There is NO\n"
 "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
 "\n\n",
-argv[0]);
+argv[0], GIT_REV);
 
 		fprintf(stderr, "Use: %s <program 1> <program 2> [options]\n"
 			"   Options:\n"

@@ -25,6 +25,14 @@ CPPFLAGS += -DNDEBUG
 CFLAGS += -O2
 endif
 
+GIT = $(shell git --help >/dev/null; echo $$?)
+ifeq ($(GIT),0)
+GIT_REV = $(shell git describe --long | sed 's/\([^-]*-g\)/r\1/;s/-/./g')
+$(info $(GIT_REV))
+CPPFLAGS += -DGIT_REV=\"$(GIT_REV)\"
+endif
+
+
 # Use implicit rules only for these suffixes
 .SUFFIXES:
 .SUFFIXES: .c .o .obj
