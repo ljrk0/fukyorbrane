@@ -603,6 +603,14 @@ int execcmd(int procnum)
 	case CMD_L3O:
 		/* start a new process! */
 		if (!procowner->pdata[*pptr].spent) {
+
+			/* if we'd run out of process-space ignore the command
+			 * TODO: Possibly kill the offending process or even
+			 * make the program lose?
+			 */
+			if (procc+1 >= MAX_PROC_COUNT) {
+				break;
+			}
 			processes[procc].owner = procowner;
 			processes[procc].pptrs = *pptr + 1;
 			processes[procc].dptrs = *dptr;
