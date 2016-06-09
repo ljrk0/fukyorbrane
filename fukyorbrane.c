@@ -672,7 +672,7 @@ int execcmd(int procnum)
 
 	case CMD_BOM:
 		/* boom! */
-		return ((!(procowner-1)) + 1);
+		return (procowner == &programs[0]) ? 2 : 1;
 	case CMD_OKB:
 		/**
 		 * sorta boom! Kill the current process.
